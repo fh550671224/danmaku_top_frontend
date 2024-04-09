@@ -1,26 +1,20 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import {Welcome} from "./pages/welcome";
+import {RoomIndex} from "./pages/room/";
+import {RoomComponent} from "./pages/room/room_component";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Welcome/>}/>
+                <Route path="/room" element={<RoomIndex/>}/>
+                <Route path="room/:room_id" element={<RoomComponent />} />
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;
