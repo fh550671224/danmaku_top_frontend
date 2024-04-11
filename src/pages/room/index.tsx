@@ -3,6 +3,7 @@ import axios from 'axios';
 import Button from "@mui/material/Button";
 import {List, ListItem, ListItemButton} from "@mui/material";
 import {useNavigate} from "react-router-dom";
+import {getBackendHost} from "../../api/util";
 
 type GetRoomsResp = {
     data: Array<string>
@@ -16,7 +17,8 @@ export const RoomIndex = () => {
     let navigate = useNavigate();
 
     const GetRooms = () => {
-        axios.get("http://localhost:5000/danmaku_top").then((resp) => {
+        const host = getBackendHost()
+        axios.get(`http://${host}:5000/danmaku_top`).then((resp) => {
             setRooms(resp.data.data)
         }).catch((e) => {
             console.error(e)
