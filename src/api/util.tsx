@@ -3,6 +3,7 @@ export const getBackendHost = ():string =>{
     if(local_dev == "1"){
         return "localhost"
     } else{
-        return "danmaku_top"
+        // return "danmaku_top"
+        return "localhost"
     }
 }
