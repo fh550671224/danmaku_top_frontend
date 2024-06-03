@@ -23,7 +23,7 @@ export const RoomComponent = () => {
 
     const GetTopDanmaku = (n: number) => {
         const host = getBackendHost()
-        axios.get(`/danmaku_top/${room_id}?n=${n}`).then((resp) => {
+        axios.get(`/api/${room_id}?n=${n}`).then((resp) => {
             let t: [string, number][] = resp.data
             let tt = t.map((item) => {
                 let d: Danmaku = {
