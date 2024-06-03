@@ -18,7 +18,7 @@ export const RoomIndex = () => {
 
     const GetRooms = () => {
         const host = getBackendHost()
-        axios.get(`http://${host}:5000/danmaku_top`).then((resp) => {
+        axios.get(`/danmaku_top`).then((resp) => {
             setRooms(resp.data.data)
         }).catch((e) => {
             console.error(e)
