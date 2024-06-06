@@ -3,16 +3,16 @@ import axios from 'axios';
 import {useParams} from 'react-router-dom';
 import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
 import {InputNumber, message, Table} from 'antd';
-import type { TableProps } from 'antd';
+import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
-import {getBackendHost} from "../../api/util";
+import {getBackendHost} from "../../../api/util";
 
 type Danmaku = {
     txt: string,
     cnt: number,
 }
 
-export const RoomComponent = () => {
+export const RoomDetail = () => {
     const [danmakuList, setDanmakuList] = useState<Danmaku[]>([])
     const [queryNum, setQueryNum] = useState(100)
 
@@ -23,7 +23,7 @@ export const RoomComponent = () => {
 
     const GetTopDanmaku = (n: number) => {
         const host = getBackendHost()
-        axios.get(`/api/${room_id}?n=${n}`).then((resp) => {
+        axios.get(`${host}/api/${room_id}?n=${n}`).then((resp) => {
             let t: [string, number][] = resp.data
             let tt = t.map((item) => {
                 let d: Danmaku = {
@@ -47,7 +47,7 @@ export const RoomComponent = () => {
             title: 'Txt',
             dataIndex: 'txt',
             key: 'txt',
-            render: (txt)=>{
+            render: (txt) => {
                 return <Button onClick={() => {
                     navigator.clipboard.writeText(txt).then(() => {
                         messageApi.info('copied')
@@ -66,7 +66,7 @@ export const RoomComponent = () => {
 
     return <div>
         <InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {
-            if(n){
+            if (n) {
                 setQueryNum(n)
             }
         }}/>

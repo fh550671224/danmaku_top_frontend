@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom";
 import Button from "@mui/material/Button";
 import {Menu, MenuItem} from "@mui/material";
 
-export const Welcome = () => {
+export const AnchorMenu = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -24,7 +24,7 @@ export const Welcome = () => {
                 aria-haspopup="true"
                 onClick={handleClick}
             >
-                Open Menu
+                Menu
             </Button>
             <Menu
                 id="simple-menu"
@@ -33,11 +33,16 @@ export const Welcome = () => {
                 open={open}
                 onClose={handleClose}
             >
-                <MenuItem onClick={()=>{
+                <MenuItem onClick={() => {
+                    navigate('/')
+                    setAnchorEl(null);
+                }}>Home</MenuItem>
+                <MenuItem onClick={() => {
                     navigate('/room')
+                    setAnchorEl(null);
                 }}>Rooms</MenuItem>
-                <MenuItem onClick={handleClose}>Logout</MenuItem>
+                {/*<MenuItem onClick={handleClose}>Logout</MenuItem>*/}
             </Menu>
         </div>
     );
-};
+}

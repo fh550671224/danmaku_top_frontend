@@ -1,1 +1,1 @@
-export const AA = 'ss'
+export const Example = 'example'
