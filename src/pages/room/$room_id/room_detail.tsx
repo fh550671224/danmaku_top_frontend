@@ -2,7 +2,8 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useParams} from 'react-router-dom';
 import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
-import {InputNumber, message, Table} from 'antd';
+import {CopyOutlined,CloseOutlined} from '@ant-design/icons';
+import {Card, InputNumber, message, Popover, Table} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
 import {getBackendHost} from "../../../api/util";
@@ -12,9 +13,18 @@ type Danmaku = {
     cnt: number,
 }
 
+type DanmakuInfo = {
+    create_time_stamp: number,
+    first_author: string,
+    first_author_badge: string,
+    room_id: string,
+    text: string,
+}
+
 export const RoomDetail = () => {
     const [danmakuList, setDanmakuList] = useState<Danmaku[]>([])
     const [queryNum, setQueryNum] = useState(100)
+    const [danmakuInfo, setDanmakuInfo] = useState<DanmakuInfo>()
 
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -38,6 +48,19 @@ export const RoomDetail = () => {
         })
     }
 
+    const GetDanmakuInfo = (text: string) => {
+        const host = getBackendHost()
+        axios.get(`${host}/api/danmaku_info?col=danmaku_info&text=${text}`).then((resp) => {
+            let t: DanmakuInfo[] = resp.data.data
+            let total = resp.data.total
+            if (total && total > 0) {
+                setDanmakuInfo(t[0])
+            }
+        }).catch((e) => {
+            console.error(e)
+        })
+    }
+
     useEffect(() => {
         GetTopDanmaku(queryNum)
     }, []);
@@ -48,13 +71,33 @@ export const RoomDetail = () => {
             dataIndex: 'txt',
             key: 'txt',
             render: (txt) => {
-                return <Button onClick={() => {
+                return <span>
+                    <Popover
+                        content={
+                            <Card title={"Danmaku Info"} onBlur={() => {
+                            }} extra={<Button onClick={()=>{
+                                setDanmakuInfo(undefined)
+                            }}><CloseOutlined /></Button>}>
+                                <p>create time:{danmakuInfo?.create_time_stamp}</p>
+                                <p>author: {danmakuInfo?.first_author}</p>
+                                <p>badge: {danmakuInfo?.first_author_badge}</p>
+                            </Card>
+                        }
+                        open={danmakuInfo !== undefined && danmakuInfo.text === txt}
+                    >
+                            <a onClick={() => {
+                                GetDanmakuInfo(txt)
+                            }}>{txt}</a>
+                    </Popover>
+                <Button onClick={() => {
                     navigator.clipboard.writeText(txt).then(() => {
                         messageApi.info('copied')
                     }).catch(err => {
                         messageApi.error('copy error: ', err);
                     });
-                }}>{txt}</Button>
+                }}><CopyOutlined/> </Button>
+                </span>
+
             }
         },
         {
