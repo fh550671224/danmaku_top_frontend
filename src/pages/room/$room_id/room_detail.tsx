@@ -6,7 +6,7 @@ import {CopyOutlined,CloseOutlined} from '@ant-design/icons';
 import {Card, InputNumber, message, Popover, Table} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
-import {getBackendHost} from "../../../api/util";
+import {convertTimestampToDate, getBackendHost} from "../../../api/util";
 
 type Danmaku = {
     txt: string,
@@ -71,6 +71,7 @@ export const RoomDetail = () => {
             dataIndex: 'txt',
             key: 'txt',
             render: (txt) => {
+                let ct = danmakuInfo?convertTimestampToDate(danmakuInfo.create_time_stamp):""
                 return <span>
                     <Popover
                         content={
@@ -78,7 +79,7 @@ export const RoomDetail = () => {
                             }} extra={<Button onClick={()=>{
                                 setDanmakuInfo(undefined)
                             }}><CloseOutlined /></Button>}>
-                                <p>create time:{danmakuInfo?.create_time_stamp}</p>
+                                <p>create time: {ct}</p>
                                 <p>author: {danmakuInfo?.first_author}</p>
                                 <p>badge: {danmakuInfo?.first_author_badge}</p>
                             </Card>
