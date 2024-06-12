@@ -2,8 +2,8 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useParams} from 'react-router-dom';
 import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
-import {CopyOutlined,CloseOutlined} from '@ant-design/icons';
-import {Card, InputNumber, message, Popover, Table} from 'antd';
+import {CopyOutlined, CloseOutlined, DeleteOutlined} from '@ant-design/icons';
+import {Card, InputNumber, message, Popover, Switch, Table} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
 import {convertTimestampToDate, getBackendHost} from "../../../api/util";
@@ -22,9 +22,12 @@ type DanmakuInfo = {
 }
 
 export const RoomDetail = () => {
-    const [danmakuList, setDanmakuList] = useState<Danmaku[]>([])
+    const [topDanmakuList, setTopDanmakuList] = useState<Danmaku[]>([])
     const [queryNum, setQueryNum] = useState(100)
     const [danmakuInfo, setDanmakuInfo] = useState<DanmakuInfo>()
+
+    const [isCommonDanmaku, setIsCommonDanmaku] = useState(false);
+    const [commonDanmakuList, setCommonDanmakuList] = useState<DanmakuInfo[]>([]);
 
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -33,7 +36,7 @@ export const RoomDetail = () => {
 
     const GetTopDanmaku = (n: number) => {
         const host = getBackendHost()
-        axios.get(`${host}/api/${room_id}?n=${n}`).then((resp) => {
+        axios.get(`${host}/api/top_danmaku/${room_id}?n=${n}`).then((resp) => {
             let t: [string, number][] = resp.data
             let tt = t.map((item) => {
                 let d: Danmaku = {
@@ -42,7 +45,7 @@ export const RoomDetail = () => {
                 }
                 return d
             })
-            setDanmakuList(tt)
+            setTopDanmakuList(tt)
         }).catch((e) => {
             console.error(e)
         })
@@ -61,24 +64,76 @@ export const RoomDetail = () => {
         })
     }
 
+    const ArchiveDanmaku = (text: string) => {
+        const host = getBackendHost()
+        axios.post(`${host}/api/archive_danmaku`, {text: text, room_id: room_id}).then((resp) => {
+            console.log(resp)
+            window.location.reload();
+        }).catch((e) => {
+            console.error(e)
+        })
+    }
+
+    const GetCommonDanmaku = () => {
+        const host = getBackendHost()
+        axios.get(`${host}/api/common_danmaku/${room_id}`).then((resp) => {
+            console.log(resp)
+            setCommonDanmakuList(resp.data)
+        }).catch((e) => {
+            console.error(e)
+        })
+    }
+
+    const DeleteCommonDanmaku = (text: string) => {
+        const host = getBackendHost()
+        axios.delete(`${host}/api/danmaku?text=${text}`).then((resp) => {
+            window.location.reload();
+        }).catch((e) => {
+            console.error(e)
+        })
+    }
+
     useEffect(() => {
         GetTopDanmaku(queryNum)
     }, []);
 
-    const cols: TableProps<Danmaku>['columns'] = [
+    useEffect(() => {
+        if (isCommonDanmaku) {
+            GetCommonDanmaku()
+        }
+    }, [isCommonDanmaku]);
+
+    const commonDanmakuCols: TableProps<{ text: string }>['columns'] = [
+        {
+            title: 'Txt',
+            dataIndex: 'text',
+            key: 'txt'
+        },
+        {
+            title: 'Delete',
+            dataIndex: 'text',
+            key: 'archive',
+            render: (txt) => {
+                return <Button onClick={() => {
+                    DeleteCommonDanmaku(txt)
+                }}><DeleteOutlined/></Button>
+            }
+        }
+    ]
+
+    const topDanmakuCols: TableProps<Danmaku>['columns'] = [
         {
             title: 'Txt',
             dataIndex: 'txt',
             key: 'txt',
             render: (txt) => {
-                let ct = danmakuInfo?convertTimestampToDate(danmakuInfo.create_time_stamp):""
+                let ct = danmakuInfo ? convertTimestampToDate(danmakuInfo.create_time_stamp) : ""
                 return <span>
                     <Popover
                         content={
-                            <Card title={"Danmaku Info"} onBlur={() => {
-                            }} extra={<Button onClick={()=>{
+                            <Card title={"Danmaku Info"} extra={<Button onClick={() => {
                                 setDanmakuInfo(undefined)
-                            }}><CloseOutlined /></Button>}>
+                            }}><CloseOutlined/></Button>}>
                                 <p>create time: {ct}</p>
                                 <p>author: {danmakuInfo?.first_author}</p>
                                 <p>badge: {danmakuInfo?.first_author_badge}</p>
@@ -106,6 +161,16 @@ export const RoomDetail = () => {
             dataIndex: 'cnt',
             key: 'cnt',
         },
+        {
+            title: 'Archive',
+            dataIndex: 'txt',
+            key: 'archive',
+            render: (txt) => {
+                return <Button onClick={() => {
+                    ArchiveDanmaku(txt)
+                }}><DeleteOutlined/></Button>
+            }
+        }
     ]
 
     return <div>
@@ -118,34 +183,10 @@ export const RoomDetail = () => {
             GetTopDanmaku(queryNum)
         }}>Query</Button>
         {contextHolder}
-        {/*<List dataSource={danmakuList} renderItem={(item) =>{*/}
-        {/*    return <List.Item>*/}
-        {/*        <Button onClick={() => {*/}
-        {/*            navigator.clipboard.writeText(item.txt).then(() => {*/}
-        {/*                messageApi.info('copied')*/}
-        {/*            }).catch(err => {*/}
-        {/*                messageApi.error('copy error: ', err);*/}
-        {/*            });*/}
-        {/*        }}>{item.txt}*/}
-        {/*            {"\t次数:"}{item.cnt}</Button>*/}
-        {/*    </List.Item>*/}
-        {/*}}></List>*/}
-        <Table dataSource={danmakuList} columns={cols}></Table>
-
-        {/*<List>*/}
-        {/*    {danmakuList.map((item) => {*/}
-        {/*        return <ListItem>*/}
-        {/*            <ListItemButton onClick={() => {*/}
-        {/*                navigator.clipboard.writeText(item.txt).then(() => {*/}
-        {/*                    messageApi.info('copied')*/}
-        {/*                }).catch(err => {*/}
-        {/*                    messageApi.error('copy error: ', err);*/}
-        {/*                });*/}
-        {/*            }}>{item.txt}*/}
-        {/*                {"\t次数:"}{item.cnt}</ListItemButton>*/}
-
-        {/*        </ListItem>*/}
-        {/*    })}*/}
-        {/*</List>*/}
+        <Table dataSource={topDanmakuList} columns={topDanmakuCols}></Table>
+        <Switch value={isCommonDanmaku} onChange={(checked) => {
+            setIsCommonDanmaku(checked)
+        }}/>
+        {isCommonDanmaku ? <Table dataSource={commonDanmakuList} columns={commonDanmakuCols}></Table> : null}
     </div>
 }
