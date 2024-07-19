@@ -1,72 +1,46 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
-import {useParams} from 'react-router-dom';
+import {useParams, useNavigate, useLocation} from 'react-router-dom';
 import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
-import {CopyOutlined, CloseOutlined, DeleteOutlined} from '@ant-design/icons';
-import {Card, InputNumber, message, Popover, Switch, Table} from 'antd';
+import {CopyOutlined, UpOutlined, DownOutlined, DeleteOutlined} from '@ant-design/icons';
+import {Card, Input, InputNumber, message, Popover, Switch, Table, TablePaginationConfig} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
 import {convertTimestampToDate, getBackendHost} from "../../../api/util";
 
-type Danmaku = {
-    txt: string,
-    cnt: number,
-}
-
 type DanmakuInfo = {
-    create_time_stamp: number,
+    create_time: number,
     first_author: string,
     first_author_badge: string,
-    room_id: string,
+    room: string,
     text: string,
+    count: number,
+    is_hot: boolean
 }
 
 export const RoomDetail = () => {
-    const [topDanmakuList, setTopDanmakuList] = useState<Danmaku[]>([])
+    const [danmakuList, setDanmakuList] = useState<DanmakuInfo[]>([])
     const [queryNum, setQueryNum] = useState(100)
-    const [danmakuInfo, setDanmakuInfo] = useState<DanmakuInfo>()
-
-    const [isCommonDanmaku, setIsCommonDanmaku] = useState(false);
-    const [commonDanmakuList, setCommonDanmakuList] = useState<DanmakuInfo[]>([]);
+    const [queryText, setQueryText] = useState<string>("")
+    const [hotOnly, setHotOnly] = useState(true)
 
     const [messageApi, contextHolder] = message.useMessage();
 
     const params = useParams();
-    const room_id = params.room_id;
+    const room = params.room;
 
-    const GetTopDanmaku = (n: number) => {
+    const GetDanmaku = () => {
         const host = getBackendHost()
-        axios.get(`${host}/api/top_danmaku/${room_id}?n=${n}`).then((resp) => {
-            let t: [string, number][] = resp.data
-            let tt = t.map((item) => {
-                let d: Danmaku = {
-                    txt: item[0],
-                    cnt: item[1],
-                }
-                return d
-            })
-            setTopDanmakuList(tt)
+        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}`).then((resp) => {
+            setDanmakuList(resp.data)
         }).catch((e) => {
             console.error(e)
         })
     }
 
-    const GetDanmakuInfo = (text: string) => {
+    const UpdateDanmaku = (record: DanmakuInfo) => {
         const host = getBackendHost()
-        axios.get(`${host}/api/danmaku_info?col=danmaku_info&text=${text}`).then((resp) => {
-            let t: DanmakuInfo[] = resp.data.data
-            let total = resp.data.total
-            if (total && total > 0) {
-                setDanmakuInfo(t[0])
-            }
-        }).catch((e) => {
-            console.error(e)
-        })
-    }
-
-    const ArchiveDanmaku = (text: string) => {
-        const host = getBackendHost()
-        axios.post(`${host}/api/archive_danmaku`, {text: text, room_id: room_id}).then((resp) => {
+        axios.put(`${host}/api/danmaku/${record.room}`, record).then((resp) => {
             console.log(resp)
             window.location.reload();
         }).catch((e) => {
@@ -74,19 +48,10 @@ export const RoomDetail = () => {
         })
     }
 
-    const GetCommonDanmaku = () => {
+    const DeleteDanmaku = (record: DanmakuInfo) => {
         const host = getBackendHost()
-        axios.get(`${host}/api/common_danmaku/${room_id}`).then((resp) => {
+        axios.delete(`${host}/api/danmaku/${record.room}?text=${record.text}`).then((resp) => {
             console.log(resp)
-            setCommonDanmakuList(resp.data)
-        }).catch((e) => {
-            console.error(e)
-        })
-    }
-
-    const DeleteCommonDanmaku = (text: string) => {
-        const host = getBackendHost()
-        axios.delete(`${host}/api/danmaku?text=${text}`).then((resp) => {
             window.location.reload();
         }).catch((e) => {
             console.error(e)
@@ -94,59 +59,36 @@ export const RoomDetail = () => {
     }
 
     useEffect(() => {
-        GetTopDanmaku(queryNum)
+        GetDanmaku()
     }, []);
 
     useEffect(() => {
-        if (isCommonDanmaku) {
-            GetCommonDanmaku()
-        }
-    }, [isCommonDanmaku]);
+        GetDanmaku()
+    }, [hotOnly]);
 
-    const commonDanmakuCols: TableProps<{ text: string }>['columns'] = [
+    const topDanmakuCols: TableProps<DanmakuInfo>['columns'] = [
         {
             title: 'Txt',
             dataIndex: 'text',
-            key: 'txt'
-        },
-        {
-            title: 'Delete',
-            dataIndex: 'text',
-            key: 'archive',
-            render: (txt) => {
-                return <Button onClick={() => {
-                    DeleteCommonDanmaku(txt)
-                }}><DeleteOutlined/></Button>
-            }
-        }
-    ]
-
-    const topDanmakuCols: TableProps<Danmaku>['columns'] = [
-        {
-            title: 'Txt',
-            dataIndex: 'txt',
             key: 'txt',
-            render: (txt) => {
-                let ct = danmakuInfo ? convertTimestampToDate(danmakuInfo.create_time_stamp) : ""
+            render: (value, record, index) => {
                 return <span>
                     <Popover
                         content={
-                            <Card title={"Danmaku Info"} extra={<Button onClick={() => {
-                                setDanmakuInfo(undefined)
-                            }}><CloseOutlined/></Button>}>
-                                <p>create time: {ct}</p>
-                                <p>author: {danmakuInfo?.first_author}</p>
-                                <p>badge: {danmakuInfo?.first_author_badge}</p>
+                            <Card title={"Danmaku Info"}>
+                                <p>create time: {convertTimestampToDate(record.create_time)}</p>
+                                <p>author: {record.first_author}</p>
+                                <p>badge: {record.first_author_badge}</p>
                             </Card>
                         }
-                        open={danmakuInfo !== undefined && danmakuInfo.text === txt}
+                        trigger={'hover'}
                     >
                             <a onClick={() => {
-                                GetDanmakuInfo(txt)
-                            }}>{txt}</a>
+                                // GetDanmakuInfo(txt)
+                            }}>{record.text}</a>
                     </Popover>
                 <Button onClick={() => {
-                    navigator.clipboard.writeText(txt).then(() => {
+                    navigator.clipboard.writeText(record.text).then(() => {
                         messageApi.info('copied')
                     }).catch(err => {
                         messageApi.error('copy error: ', err);
@@ -157,36 +99,72 @@ export const RoomDetail = () => {
             }
         },
         {
-            title: 'Cnt',
-            dataIndex: 'cnt',
-            key: 'cnt',
+            title: 'Count',
+            dataIndex: 'count',
+            key: 'count',
         },
         {
-            title: 'Archive',
-            dataIndex: 'txt',
-            key: 'archive',
-            render: (txt) => {
-                return <Button onClick={() => {
-                    ArchiveDanmaku(txt)
+            title: 'Operation',
+            key: 'operation',
+            render: (value, record, index) => {
+                return <span><Button disabled={record.is_hot} onClick={() => {
+                    record.is_hot = true
+                    UpdateDanmaku(record)
+                }}><UpOutlined/></Button>
+                    <Button disabled={!record.is_hot} onClick={() => {
+                        record.is_hot = false
+                        UpdateDanmaku(record)
+                    }}><DownOutlined/></Button>
+                <Button onClick={()=>{
+                    DeleteDanmaku(record)
                 }}><DeleteOutlined/></Button>
+                </span>
             }
         }
     ]
 
+    // save url below
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const query = new URLSearchParams(location.search);
+    const initialPage = parseInt(query.get('page') || '1', 10);
+    const initialPageSize = parseInt(query.get('pageSize') || '10', 10);
+
+    const [current, setCurrent] = useState<number>(initialPage);
+    const [pageSize, setPageSize] = useState<number>(initialPageSize);
+
+    useEffect(() => {
+        query.set('page', current.toString());
+        query.set('pageSize', pageSize.toString());
+        navigate({ search: query.toString() }, { replace: true });
+    }, [current, pageSize, navigate]);
+
+    const handleTableChange = (
+        pagination: TablePaginationConfig
+    ) => {
+        setCurrent(pagination.current || 1);
+        setPageSize(pagination.pageSize || 10);
+    };
+    // save url above TODO save more info
+
     return <div>
-        <InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {
+        <span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {
             if (n) {
                 setQueryNum(n)
             }
+        }}/> </span>
+        <Input placeholder={'keyword search'} style={{'width':500}} value={queryText} onChange={(e) => {
+            setQueryText(e.target.value)
+        }}/>
+        <Switch value={hotOnly} onChange={(checked)=>{
+            setHotOnly(checked)
         }}/>
         <Button onClick={() => {
-            GetTopDanmaku(queryNum)
+            GetDanmaku()
         }}>Query</Button>
+
         {contextHolder}
-        <Table dataSource={topDanmakuList} columns={topDanmakuCols}></Table>
-        <Switch value={isCommonDanmaku} onChange={(checked) => {
-            setIsCommonDanmaku(checked)
-        }}/>
-        {isCommonDanmaku ? <Table dataSource={commonDanmakuList} columns={commonDanmakuCols}></Table> : null}
+        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current, pageSize}} onChange={handleTableChange}></Table>
     </div>
 }

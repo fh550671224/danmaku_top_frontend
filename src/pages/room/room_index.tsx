@@ -29,7 +29,7 @@ export const RoomIndex = () => {
 
     const AddRoom = () => {
         const host = getBackendHost()
-        axios.post(`${host}/api/rooms`, {room_id: roomToAdd}).then((resp) => {
+        axios.post(`${host}/api/rooms`, {room: roomToAdd}).then((resp) => {
             console.log(resp)
         }).catch((e) => {
             console.error(e)
