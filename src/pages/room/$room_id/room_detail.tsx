@@ -50,7 +50,7 @@ export const RoomDetail = () => {
 
     const DeleteDanmaku = (record: DanmakuInfo) => {
         const host = getBackendHost()
-        axios.delete(`${host}/api/danmaku/${record.room}?text=${record.text}`).then((resp) => {
+        axios.post(`${host}/api/delete_danmaku`, record).then((resp) => {
             console.log(resp)
             window.location.reload();
         }).catch((e) => {
