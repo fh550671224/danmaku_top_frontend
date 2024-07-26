@@ -2,8 +2,8 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useParams, useNavigate, useLocation} from 'react-router-dom';
 import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
-import {CopyOutlined, UpOutlined, DownOutlined, DeleteOutlined} from '@ant-design/icons';
-import {Card, Input, InputNumber, message, Popover, Switch, Table, TablePaginationConfig} from 'antd';
+import {CopyOutlined, UpOutlined, DownOutlined, DeleteOutlined } from '@ant-design/icons';
+import {Select, Card, Input, InputNumber, message, Popover, Switch, Table, TablePaginationConfig} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
 import {convertTimestampToDate, getBackendHost} from "../../../api/util";
@@ -19,19 +19,34 @@ type DanmakuInfo = {
 }
 
 export const RoomDetail = () => {
-    const [danmakuList, setDanmakuList] = useState<DanmakuInfo[]>([])
-    const [queryNum, setQueryNum] = useState(100)
-    const [queryText, setQueryText] = useState<string>("")
-    const [hotOnly, setHotOnly] = useState(true)
-
-    const [messageApi, contextHolder] = message.useMessage();
-
     const params = useParams();
     const room = params.room;
 
+    // save url below
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const query = new URLSearchParams(location.search);
+    const initialPage = parseInt(query.get('page') || '1', 10);
+    const initialPageSize = parseInt(query.get('pageSize') || '10', 10);
+    const initialQueryText = query.get('text') || ''
+    const initialQueryNum = parseInt(query.get('topn')|| '100', 10)
+
+    const [danmakuList, setDanmakuList] = useState<DanmakuInfo[]>([])
+
+    const [current, setCurrent] = useState<number>(initialPage);
+    const [pageSize, setPageSize] = useState<number>(initialPageSize);
+    const [queryNum, setQueryNum] = useState(initialQueryNum)
+    const [queryText, setQueryText] = useState<string>(initialQueryText)
+    const [hotOnly, setHotOnly] = useState(true)
+    const [traceBackTime, setTraceBackTime] = useState(0)
+
+    const [messageApi, contextHolder] = message.useMessage();
+
+
     const GetDanmaku = () => {
         const host = getBackendHost()
-        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}`).then((resp) => {
+        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}&trace_back_time=${traceBackTime}`).then((resp) => {
             setDanmakuList(resp.data)
         }).catch((e) => {
             console.error(e)
@@ -64,7 +79,15 @@ export const RoomDetail = () => {
 
     useEffect(() => {
         GetDanmaku()
-    }, [hotOnly]);
+    }, [hotOnly, traceBackTime]);
+
+    useEffect(() => {
+        query.set('page', current.toString());
+        query.set('pageSize', pageSize.toString());
+        query.set('text', queryText)
+        query.set('topn', queryNum.toString())
+        navigate({ search: query.toString() }, { replace: true });
+    }, [current, pageSize, navigate, queryText, queryNum]);
 
     const topDanmakuCols: TableProps<DanmakuInfo>['columns'] = [
         {
@@ -123,48 +146,40 @@ export const RoomDetail = () => {
         }
     ]
 
-    // save url below
-    const location = useLocation();
-    const navigate = useNavigate();
-
-    const query = new URLSearchParams(location.search);
-    const initialPage = parseInt(query.get('page') || '1', 10);
-    const initialPageSize = parseInt(query.get('pageSize') || '10', 10);
-
-    const [current, setCurrent] = useState<number>(initialPage);
-    const [pageSize, setPageSize] = useState<number>(initialPageSize);
-
-    useEffect(() => {
-        query.set('page', current.toString());
-        query.set('pageSize', pageSize.toString());
-        navigate({ search: query.toString() }, { replace: true });
-    }, [current, pageSize, navigate]);
-
-    const handleTableChange = (
-        pagination: TablePaginationConfig
-    ) => {
-        setCurrent(pagination.current || 1);
-        setPageSize(pagination.pageSize || 10);
-    };
-    // save url above TODO save more info
-
     return <div>
         <span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {
             if (n) {
                 setQueryNum(n)
             }
         }}/> </span>
-        <Input placeholder={'keyword search'} style={{'width':500}} value={queryText} onChange={(e) => {
+        <Input placeholder={'keyword search'} onPressEnter={()=>{
+            GetDanmaku()
+        }} allowClear style={{'width':500}} value={queryText} onChange={(e) => {
             setQueryText(e.target.value)
         }}/>
         <Switch value={hotOnly} onChange={(checked)=>{
             setHotOnly(checked)
         }}/>
+        <Select defaultValue={0} options = {[
+            {value: 0, label:'ALL TIME'},
+            {value: 24 * 60 * 60, label:'LAST 24 HOURS'},
+            {value: 3 * 24 * 60 * 60, label:'LAST 72 HOURS'},
+            {value: 7 * 24 * 60 * 60, label:'LAST 1 WEEK'},
+            {value: 30 * 24 * 60 * 60, label:'LAST 30 DAYS'},
+        ]} onChange={(v:number)=>{
+            const now = Math.floor(Date.now() / 1000)
+            setTraceBackTime(now - v)
+        }}></Select>
         <Button onClick={() => {
             GetDanmaku()
         }}>Query</Button>
 
         {contextHolder}
-        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current, pageSize}} onChange={handleTableChange}></Table>
+        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current, pageSize}} onChange={(
+            pagination: TablePaginationConfig
+        ) => {
+            setCurrent(pagination.current || 1);
+            setPageSize(pagination.pageSize || 10);
+        }}></Table>
     </div>
 }
