@@ -28,18 +28,19 @@ export const RoomDetail = () => {
 
     const query = new URLSearchParams(location.search);
     const initialPage = parseInt(query.get('page') || '1', 10);
-    const initialPageSize = parseInt(query.get('pageSize') || '10', 10);
+    const initialPageSize = parseInt(query.get('pageSize') || '20', 10);
     const initialQueryText = query.get('text') || ''
     const initialQueryNum = parseInt(query.get('topn')|| '100', 10)
+    const initialTraceBackTime = parseInt(query.get('trace_back_time')||'0', 10)
 
     const [danmakuList, setDanmakuList] = useState<DanmakuInfo[]>([])
 
-    const [current, setCurrent] = useState<number>(initialPage);
+    const [currentPage, setCurrentPage] = useState<number>(initialPage);
     const [pageSize, setPageSize] = useState<number>(initialPageSize);
     const [queryNum, setQueryNum] = useState(initialQueryNum)
     const [queryText, setQueryText] = useState<string>(initialQueryText)
     const [hotOnly, setHotOnly] = useState(true)
-    const [traceBackTime, setTraceBackTime] = useState(0)
+    const [traceBackTime, setTraceBackTime] = useState(initialTraceBackTime)
 
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -82,12 +83,13 @@ export const RoomDetail = () => {
     }, [hotOnly, traceBackTime]);
 
     useEffect(() => {
-        query.set('page', current.toString());
+        query.set('page', currentPage.toString());
         query.set('pageSize', pageSize.toString());
         query.set('text', queryText)
         query.set('topn', queryNum.toString())
+        query.set('trace_back_time', traceBackTime.toString())
         navigate({ search: query.toString() }, { replace: true });
-    }, [current, pageSize, navigate, queryText, queryNum]);
+    }, [currentPage, pageSize, navigate, queryText, queryNum, traceBackTime]);
 
     const topDanmakuCols: TableProps<DanmakuInfo>['columns'] = [
         {
@@ -167,18 +169,22 @@ export const RoomDetail = () => {
             {value: 7 * 24 * 60 * 60, label:'LAST 1 WEEK'},
             {value: 30 * 24 * 60 * 60, label:'LAST 30 DAYS'},
         ]} onChange={(v:number)=>{
-            const now = Math.floor(Date.now() / 1000)
-            setTraceBackTime(now - v)
+            if(v===0){
+                setTraceBackTime(v)
+            } else {
+                const now = Math.floor(Date.now() / 1000)
+                setTraceBackTime(now - v)
+            }
         }}></Select>
         <Button onClick={() => {
             GetDanmaku()
         }}>Query</Button>
 
         {contextHolder}
-        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current, pageSize}} onChange={(
+        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current: currentPage, pageSize}} onChange={(
             pagination: TablePaginationConfig
         ) => {
-            setCurrent(pagination.current || 1);
+            setCurrentPage(pagination.current || 1);
             setPageSize(pagination.pageSize || 10);
         }}></Table>
     </div>
