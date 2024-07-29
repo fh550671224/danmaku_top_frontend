@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useParams, useNavigate, useLocation} from 'react-router-dom';
 import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
-import {CopyOutlined, UpOutlined, DownOutlined, DeleteOutlined } from '@ant-design/icons';
+import {CopyOutlined, UpOutlined, DownOutlined, DeleteOutlined} from '@ant-design/icons';
 import {Select, Card, Input, InputNumber, message, Popover, Switch, Table, TablePaginationConfig} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
@@ -30,8 +30,10 @@ export const RoomDetail = () => {
     const initialPage = parseInt(query.get('page') || '1', 10);
     const initialPageSize = parseInt(query.get('pageSize') || '20', 10);
     const initialQueryText = query.get('text') || ''
-    const initialQueryNum = parseInt(query.get('topn')|| '100', 10)
-    const initialTraceBackTime = parseInt(query.get('trace_back_time')||'0', 10)
+    const initialQueryNum = parseInt(query.get('topn') || '100', 10)
+    const initialTraceBackTime = parseInt(query.get('trace_back_time') || '0', 10)
+    const initialHotOnly = query.get('hot_only') === 'true'
+    const initialAuthor = query.get('author') || ''
 
     const [danmakuList, setDanmakuList] = useState<DanmakuInfo[]>([])
 
@@ -39,15 +41,16 @@ export const RoomDetail = () => {
     const [pageSize, setPageSize] = useState<number>(initialPageSize);
     const [queryNum, setQueryNum] = useState(initialQueryNum)
     const [queryText, setQueryText] = useState<string>(initialQueryText)
-    const [hotOnly, setHotOnly] = useState(true)
+    const [hotOnly, setHotOnly] = useState<boolean>(initialHotOnly)
     const [traceBackTime, setTraceBackTime] = useState(initialTraceBackTime)
+    const [author, setAuthor] = useState(initialAuthor)
 
     const [messageApi, contextHolder] = message.useMessage();
 
 
     const GetDanmaku = () => {
         const host = getBackendHost()
-        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}&trace_back_time=${traceBackTime}`).then((resp) => {
+        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}&trace_back_time=${traceBackTime}&author=${author}`).then((resp) => {
             setDanmakuList(resp.data)
         }).catch((e) => {
             console.error(e)
@@ -80,7 +83,7 @@ export const RoomDetail = () => {
 
     useEffect(() => {
         GetDanmaku()
-    }, [hotOnly, traceBackTime]);
+    }, [hotOnly, traceBackTime, author,queryText, queryNum]);
 
     useEffect(() => {
         query.set('page', currentPage.toString());
@@ -88,8 +91,10 @@ export const RoomDetail = () => {
         query.set('text', queryText)
         query.set('topn', queryNum.toString())
         query.set('trace_back_time', traceBackTime.toString())
-        navigate({ search: query.toString() }, { replace: true });
-    }, [currentPage, pageSize, navigate, queryText, queryNum, traceBackTime]);
+        query.set('hot_only', hotOnly ? 'true' : 'false')
+        query.set('author', author)
+        navigate({search: query.toString()}, {replace: true});
+    }, [currentPage, pageSize, navigate, queryText, queryNum, traceBackTime, hotOnly, author]);
 
     const topDanmakuCols: TableProps<DanmakuInfo>['columns'] = [
         {
@@ -102,7 +107,9 @@ export const RoomDetail = () => {
                         content={
                             <Card title={"Danmaku Info"}>
                                 <p>create time: {convertTimestampToDate(record.create_time)}</p>
-                                <p>author: {record.first_author}</p>
+                                <p >author: <a onClick={()=>{
+                                    setAuthor(record.first_author)
+                                }}>{record.first_author}</a></p>
                                 <p>badge: {record.first_author_badge}</p>
                             </Card>
                         }
@@ -140,7 +147,7 @@ export const RoomDetail = () => {
                         record.is_hot = false
                         UpdateDanmaku(record)
                     }}><DownOutlined/></Button>
-                <Button onClick={()=>{
+                <Button onClick={() => {
                     DeleteDanmaku(record)
                 }}><DeleteOutlined/></Button>
                 </span>
@@ -154,22 +161,27 @@ export const RoomDetail = () => {
                 setQueryNum(n)
             }
         }}/> </span>
-        <Input placeholder={'keyword search'} onPressEnter={()=>{
+        <Input placeholder={'keyword search'} onPressEnter={() => {
             GetDanmaku()
-        }} allowClear style={{'width':500}} value={queryText} onChange={(e) => {
+        }} allowClear style={{'width': 500}} value={queryText} onChange={(e) => {
             setQueryText(e.target.value)
         }}/>
-        <Switch value={hotOnly} onChange={(checked)=>{
+        <Input placeholder={'author search'} onPressEnter={() => {
+            GetDanmaku()
+        }} allowClear style={{'width': 500}} value={author} onChange={(e) => {
+            setAuthor(e.target.value)
+        }}/>
+        <Switch value={hotOnly} onChange={(checked) => {
             setHotOnly(checked)
         }}/>
-        <Select defaultValue={0} options = {[
-            {value: 0, label:'ALL TIME'},
-            {value: 24 * 60 * 60, label:'LAST 24 HOURS'},
-            {value: 3 * 24 * 60 * 60, label:'LAST 72 HOURS'},
-            {value: 7 * 24 * 60 * 60, label:'LAST 1 WEEK'},
-            {value: 30 * 24 * 60 * 60, label:'LAST 30 DAYS'},
-        ]} onChange={(v:number)=>{
-            if(v===0){
+        <Select defaultValue={0} options={[
+            {value: 0, label: 'ALL TIME'},
+            {value: 24 * 60 * 60, label: 'LAST 24 HOURS'},
+            {value: 3 * 24 * 60 * 60, label: 'LAST 72 HOURS'},
+            {value: 7 * 24 * 60 * 60, label: 'LAST 1 WEEK'},
+            {value: 30 * 24 * 60 * 60, label: 'LAST 30 DAYS'},
+        ]} onChange={(v: number) => {
+            if (v === 0) {
                 setTraceBackTime(v)
             } else {
                 const now = Math.floor(Date.now() / 1000)
@@ -181,11 +193,12 @@ export const RoomDetail = () => {
         }}>Query</Button>
 
         {contextHolder}
-        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current: currentPage, pageSize}} onChange={(
-            pagination: TablePaginationConfig
-        ) => {
-            setCurrentPage(pagination.current || 1);
-            setPageSize(pagination.pageSize || 10);
-        }}></Table>
+        <Table dataSource={danmakuList} columns={topDanmakuCols} pagination={{current: currentPage, pageSize}}
+               onChange={(
+                   pagination: TablePaginationConfig
+               ) => {
+                   setCurrentPage(pagination.current || 1);
+                   setPageSize(pagination.pageSize || 10);
+               }}></Table>
     </div>
 }
