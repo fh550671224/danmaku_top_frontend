@@ -7,6 +7,7 @@ import {Select, Card, Input, InputNumber, message, Popover, Switch, Table, Table
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
 import {convertTimestampToDate, getBackendHost} from "../../../api/util";
+import '../../../styles/style.css';
 
 type DanmakuInfo = {
     create_time: number,
@@ -34,6 +35,7 @@ export const RoomDetail = () => {
     const initialTraceBackTime = parseInt(query.get('trace_back_time') || '0', 10)
     const initialHotOnly = query.get('hot_only') === 'true'
     const initialAuthor = query.get('author') || ''
+    const initialHostFirst = query.get('hot_first') === 'true'
 
     const [danmakuList, setDanmakuList] = useState<DanmakuInfo[]>([])
 
@@ -44,13 +46,14 @@ export const RoomDetail = () => {
     const [hotOnly, setHotOnly] = useState<boolean>(initialHotOnly)
     const [traceBackTime, setTraceBackTime] = useState(initialTraceBackTime)
     const [author, setAuthor] = useState(initialAuthor)
+    const [hotFirst, setHotFirst] = useState<boolean>(initialHostFirst || true)
 
     const [messageApi, contextHolder] = message.useMessage();
 
 
     const GetDanmaku = () => {
         const host = getBackendHost()
-        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}&trace_back_time=${traceBackTime}&author=${author}`).then((resp) => {
+        axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}&trace_back_time=${traceBackTime}&author=${author}&hot_first=${hotFirst}`).then((resp) => {
             setDanmakuList(resp.data)
         }).catch((e) => {
             console.error(e)
@@ -83,18 +86,19 @@ export const RoomDetail = () => {
 
     useEffect(() => {
         GetDanmaku()
-    }, [hotOnly, traceBackTime, author,queryText, queryNum]);
+    }, [hotOnly, traceBackTime, author, queryText, queryNum, hotFirst]);
 
     useEffect(() => {
         query.set('page', currentPage.toString());
         query.set('pageSize', pageSize.toString());
         query.set('text', queryText)
-        query.set('topn', queryNum.toString())
+        // query.set('topn', queryNum.toString())
         query.set('trace_back_time', traceBackTime.toString())
-        query.set('hot_only', hotOnly ? 'true' : 'false')
+        // query.set('hot_only', hotOnly ? 'true' : 'false')
         query.set('author', author)
+        query.set('hot_first', hotFirst ? 'true' : 'false')
         navigate({search: query.toString()}, {replace: true});
-    }, [currentPage, pageSize, navigate, queryText, queryNum, traceBackTime, hotOnly, author]);
+    }, [currentPage, pageSize, navigate, queryText, queryNum, traceBackTime, hotOnly, author, hotFirst]);
 
     const topDanmakuCols: TableProps<DanmakuInfo>['columns'] = [
         {
@@ -107,7 +111,7 @@ export const RoomDetail = () => {
                         content={
                             <Card title={"Danmaku Info"}>
                                 <p>create time: {convertTimestampToDate(record.create_time)}</p>
-                                <p >author: <a onClick={()=>{
+                                <p>author: <a onClick={() => {
                                     setAuthor(record.first_author)
                                 }}>{record.first_author}</a></p>
                                 <p>badge: {record.first_author_badge}</p>
@@ -155,12 +159,16 @@ export const RoomDetail = () => {
         }
     ]
 
+    const highLightRow = (record: DanmakuInfo, index: number) => {
+        return record.is_hot ? 'highlight-row' : '';
+    };
+
     return <div>
-        <span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {
-            if (n) {
-                setQueryNum(n)
-            }
-        }}/> </span>
+        {/*<span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {*/}
+        {/*    if (n) {*/}
+        {/*        setQueryNum(n)*/}
+        {/*    }*/}
+        {/*}}/> </span>*/}
         <Input placeholder={'keyword search'} onPressEnter={() => {
             GetDanmaku()
         }} allowClear style={{'width': 500}} value={queryText} onChange={(e) => {
@@ -171,8 +179,11 @@ export const RoomDetail = () => {
         }} allowClear style={{'width': 500}} value={author} onChange={(e) => {
             setAuthor(e.target.value)
         }}/>
-        <Switch value={hotOnly} onChange={(checked) => {
-            setHotOnly(checked)
+        {/*<Switch value={hotOnly} onChange={(checked) => {*/}
+        {/*    setHotOnly(checked)*/}
+        {/*}}/>*/}
+        <Switch value={hotFirst} onChange={(checked) => {
+            setHotFirst(checked)
         }}/>
         <Select defaultValue={0} options={[
             {value: 0, label: 'ALL TIME'},
@@ -199,6 +210,6 @@ export const RoomDetail = () => {
                ) => {
                    setCurrentPage(pagination.current || 1);
                    setPageSize(pagination.pageSize || 10);
-               }}></Table>
+               }} rowClassName={highLightRow}></Table>
     </div>
 }
