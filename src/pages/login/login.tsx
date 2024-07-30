@@ -41,8 +41,9 @@ export const Login = () => {
         }}/>
         <Button onClick={() => {
             Login()
-        }}>Login</Button><Button onClick={() => {
-        Register()
-    }}>Register</Button>
+        }}>Login</Button>
+        {/*<Button onClick={() => {*/}
+        {/*    Register()*/}
+        {/*}}>Register</Button>*/}
     </div>
 }
