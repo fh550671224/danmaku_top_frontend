@@ -1,16 +1,24 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import {AnchorMenu} from "./anchor_menu";
+import {Outlet, useNavigate} from 'react-router-dom';
+import Button from "@mui/material/Button";
 
-export const Layout: React.FC = () => {
+const Layout = () => {
+    let navigate = useNavigate();
     return (
-        <div>
-            <AnchorMenu />
-            <div className="content">
+        <div className="container">
+            <div className="menu">
+                <div className="menu-links">
+                    <Button onClick={() => navigate('/')}>Home</Button>
+                    <Button onClick={() => navigate('/room')}>Rooms</Button>
+                </div>
+                <Button className="top-right-button" onClick={() => navigate('/login')}>
+                    Login
+                </Button>
+            </div>
+            <div className="main-content">
                 <Outlet />
             </div>
         </div>
     );
 };
-
 export default Layout;

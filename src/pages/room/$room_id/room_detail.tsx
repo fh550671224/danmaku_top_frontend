@@ -29,7 +29,7 @@ export const RoomDetail = () => {
 
     const query = new URLSearchParams(location.search);
     const initialPage = parseInt(query.get('page') || '1', 10);
-    const initialPageSize = parseInt(query.get('pageSize') || '20', 10);
+    const initialPageSize = parseInt(query.get('pageSize') || '10', 10);
     const initialQueryText = query.get('text') || ''
     const initialQueryNum = parseInt(query.get('topn') || '100', 10)
     const initialTraceBackTime = parseInt(query.get('trace_back_time') || '0', 10)
@@ -119,7 +119,7 @@ export const RoomDetail = () => {
                         }
                         trigger={'hover'}
                     >
-                            <a onClick={() => {
+                            <a style={{color:record.is_hot?'coral':'blue'}} onClick={() => {
                                 // GetDanmakuInfo(txt)
                             }}>{record.text}</a>
                     </Popover>
@@ -159,9 +159,9 @@ export const RoomDetail = () => {
         }
     ]
 
-    const highLightRow = (record: DanmakuInfo, index: number) => {
-        return record.is_hot ? 'highlight-row' : '';
-    };
+    // const highLightRow = (record: DanmakuInfo, index: number) => {
+    //     return record.is_hot ? 'highlight-row' : '';
+    // };
 
     return <div>
         {/*<span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {*/}
@@ -210,6 +210,6 @@ export const RoomDetail = () => {
                ) => {
                    setCurrentPage(pagination.current || 1);
                    setPageSize(pagination.pageSize || 10);
-               }} rowClassName={highLightRow}></Table>
+               }} ></Table>
     </div>
 }
