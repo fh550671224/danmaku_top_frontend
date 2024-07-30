@@ -5,6 +5,7 @@ import {Homepage} from "./pages/homepage";
 import {RoomDetail} from "./pages/room/$room_id/room_detail";
 import Layout from "./components/layout";
 import {RoomIndex} from "./pages/room/room_index";
+import {Login} from "./pages/login/login";
 
 function App() {
     return (
@@ -14,7 +15,7 @@ function App() {
                         <Route index element={<Homepage/>}/>
                         <Route path="/room" element={<RoomIndex/>}/>
                         <Route path="/room/:room" element={<RoomDetail/>}/>
-                        <Route path="/login" element={<div>login</div>}/>
+                        <Route path="/login" element={<Login />}/>
                     </Route>
                 </Routes>
         </Router>
