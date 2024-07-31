@@ -16,6 +16,7 @@ export const Login = () => {
         const host = getBackendHost()
         axios.post(`${host}/api/login`, {username: username, password: password}).then((resp) => {
             console.log(resp)
+            localStorage.setItem("username", username||'');
             navigate('/')
         }).catch((e) => {
             console.error(e)
@@ -26,6 +27,7 @@ export const Login = () => {
         const host = getBackendHost()
         axios.post(`${host}/api/register`, {username: username, password: password}).then((resp) => {
             console.log(resp)
+            localStorage.setItem("username", username||'');
             navigate('/')
         }).catch((e) => {
             console.error(e)

@@ -41,12 +41,7 @@ export const RoomIndex = () => {
     }, [])
 
     return <div>
-        <InputNumber value={roomToAdd} placeholder={"add room"} onChange={(v) => {
-            setRoomToAdd(v)
-        }}></InputNumber>
-        <Button onClick={() => {
-            AddRoom()
-        }}>add</Button>
+
         <List>
             {rooms.map((item) => {
                 return <ListItem><ListItemButton onClick={() => {
