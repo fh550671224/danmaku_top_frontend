@@ -1,23 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {useParams, useNavigate, useLocation} from 'react-router-dom';
-import {List, ListItem, ListItemButton, Snackbar} from "@mui/material";
 import {CopyOutlined, UpOutlined, DownOutlined, DeleteOutlined} from '@ant-design/icons';
 import {Select, Card, Input, InputNumber, message, Popover, Switch, Table, TablePaginationConfig} from 'antd';
 import type {TableProps} from 'antd';
 import Button from "@mui/material/Button";
 import {convertTimestampToDate, getBackendHost} from "../../../api/util";
 import '../../../styles/style.css';
+import {is_admin} from "../../../components/util";
+import {DanmakuInfo} from "../../../api/danmaku";
 
-type DanmakuInfo = {
-    create_time: number,
-    first_author: string,
-    first_author_badge: string,
-    room: string,
-    text: string,
-    count: number,
-    is_hot: boolean
-}
 
 export const RoomDetail = () => {
     const params = useParams();
@@ -50,12 +42,12 @@ export const RoomDetail = () => {
 
     const [messageApi, contextHolder] = message.useMessage();
 
-
     const GetDanmaku = () => {
         const host = getBackendHost()
         axios.get(`${host}/api/danmaku/${room}?n=${queryNum}&text=${queryText}&hot_only=${hotOnly}&trace_back_time=${traceBackTime}&author=${author}&hot_first=${hotFirst}`).then((resp) => {
             setDanmakuList(resp.data)
         }).catch((e) => {
+            messageApi.error(e);
             console.error(e)
         })
     }
@@ -66,6 +58,7 @@ export const RoomDetail = () => {
             console.log(resp)
             window.location.reload();
         }).catch((e) => {
+            messageApi.error(e);
             console.error(e)
         })
     }
@@ -76,6 +69,7 @@ export const RoomDetail = () => {
             console.log(resp)
             window.location.reload();
         }).catch((e) => {
+            messageApi.error(e);
             console.error(e)
         })
     }
@@ -119,7 +113,7 @@ export const RoomDetail = () => {
                         }
                         trigger={'hover'}
                     >
-                            <a style={{color:record.is_hot?'coral':'blue'}} onClick={() => {
+                            <a style={{color: record.is_hot ? 'coral' : 'blue'}} onClick={() => {
                                 // GetDanmakuInfo(txt)
                             }}>{record.text}</a>
                     </Popover>
@@ -139,7 +133,10 @@ export const RoomDetail = () => {
             dataIndex: 'count',
             key: 'count',
         },
-        {
+    ]
+
+    if (is_admin()) {
+        topDanmakuCols.push({
             title: 'Operation',
             key: 'operation',
             render: (value, record, index) => {
@@ -156,12 +153,8 @@ export const RoomDetail = () => {
                 }}><DeleteOutlined/></Button>
                 </span>
             }
-        }
-    ]
-
-    // const highLightRow = (record: DanmakuInfo, index: number) => {
-    //     return record.is_hot ? 'highlight-row' : '';
-    // };
+        })
+    }
 
     return <div>
         {/*<span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {*/}
@@ -210,6 +203,6 @@ export const RoomDetail = () => {
                ) => {
                    setCurrentPage(pagination.current || 1);
                    setPageSize(pagination.pageSize || 10);
-               }} ></Table>
+               }}></Table>
     </div>
 }

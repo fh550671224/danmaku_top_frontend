@@ -1,6 +1,6 @@
 import {getBackendHost, RoomInfo} from "../../api/util";
 import axios from "axios";
-import {Form, FormProps, Input, Button, Table, type TableProps, Card} from "antd";
+import {Form, FormProps, Input, Button, Table, type TableProps, Card, Popover, Popconfirm} from "antd";
 import React, {useEffect, useState} from "react";
 import {is_admin} from "../../components/util";
 import {ListItem} from "@mui/material";
@@ -56,9 +56,16 @@ export const Manage = () => {
             key: 'operation',
             render: (value, record, index) => {
                 return <span>
-                <Button onClick={() => {
-                    DeleteRooms(record.room)
-                }}><DeleteOutlined/></Button>
+                    <Popconfirm
+                        title="Delete the task"
+                        description="Are you sure to delete (danmaku data will also be deleted)?"
+                        onConfirm={() => {
+                            DeleteRooms(record.room)
+                        }}
+                        okText="Yes"
+                        cancelText="No"
+                    ><Button><DeleteOutlined/></Button></Popconfirm>
+
                 </span>
             }
         }
