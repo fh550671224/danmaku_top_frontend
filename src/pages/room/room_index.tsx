@@ -3,17 +3,17 @@ import axios from 'axios';
 import Button from "@mui/material/Button";
 import {List, ListItem, ListItemButton} from "@mui/material";
 import {useNavigate} from "react-router-dom";
-import {getBackendHost} from "../../api/util";
-import {InputNumber} from "antd";
+import {getBackendHost, RoomInfo} from "../../api/util";
+import {InputNumber, Table, type TableProps} from "antd";
+import {DeleteOutlined} from "@ant-design/icons";
 
 type GetRoomsResp = {
-    data: Array<string>
+    data: RoomInfo
     msg: string
 }
 
 export const RoomIndex = () => {
-    const [rooms, setRooms] = useState<string[]>([])
-    const [roomToAdd, setRoomToAdd] = useState<number | null>()
+    const [rooms, setRooms] = useState<RoomInfo[]>([])
 
 
     let navigate = useNavigate();
@@ -27,26 +27,29 @@ export const RoomIndex = () => {
         })
     }
 
-    const AddRoom = () => {
-        const host = getBackendHost()
-        axios.post(`${host}/api/rooms`, {room: roomToAdd}).then((resp) => {
-            console.log(resp)
-        }).catch((e) => {
-            console.error(e)
-        })
-    }
-
     useEffect(() => {
         GetRooms()
     }, [])
 
+    const roomCol: TableProps<RoomInfo>['columns'] = [
+        {
+            title: 'Room Id',
+            dataIndex: 'room',
+            key: 'room',
+            render: (value, record, index) => {
+                return <a onClick={() => {
+                    navigate(`/room/${record.room}`)
+                }}>{record.room}</a>
+            }
+        },
+        {
+            title: 'Streamer Name',
+            dataIndex: 'streamer_name',
+            key: 'streamer_name',
+        },
+    ]
+
     return <div>
 
-        <List>
-            {rooms.map((item) => {
-                return <ListItem><ListItemButton onClick={() => {
-                    navigate(`/room/${item}`)
-                }}>{item}</ListItemButton></ListItem>
-            })}
-        </List></div>;
+        <Table dataSource={rooms} columns={roomCol}></Table></div>;
 }

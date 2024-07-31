@@ -14,7 +14,5 @@ export const is_admin = ()=>{
 }
 
 export const get_user = ()=>{
-    console.log('fsfs', localStorage.getItem('username'))
     return localStorage.getItem('username')
-
 }
