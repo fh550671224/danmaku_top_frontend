@@ -9,6 +9,7 @@ import {convertTimestampToDate, getBackendHost} from "../../../api/util";
 import '../../../styles/style.css';
 import {is_admin} from "../../../components/util";
 import {DanmakuInfo} from "../../../api/danmaku";
+import {downloadCSV} from "../../../components/download";
 
 
 export const RoomDetail = () => {
@@ -156,7 +157,9 @@ export const RoomDetail = () => {
         })
     }
 
-    return <div>
+    return <Card title={'Danmaku List'} extra={is_admin() ? <Button onClick={() => {
+        downloadCSV(danmakuList, 'res.csv')
+    }}>Download</Button> : null}>
         {/*<span><> topN:</><InputNumber placeholder={'query amount'} value={queryNum} onChange={(n) => {*/}
         {/*    if (n) {*/}
         {/*        setQueryNum(n)*/}
@@ -204,5 +207,5 @@ export const RoomDetail = () => {
                    setCurrentPage(pagination.current || 1);
                    setPageSize(pagination.pageSize || 10);
                }}></Table>
-    </div>
+    </Card>
 }
