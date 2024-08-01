@@ -188,12 +188,7 @@ export const RoomDetail = () => {
             {value: 7 * 24 * 60 * 60, label: 'LAST 1 WEEK'},
             {value: 30 * 24 * 60 * 60, label: 'LAST 30 DAYS'},
         ]} onChange={(v: number) => {
-            if (v === 0) {
-                setTraceBackTime(v)
-            } else {
-                const now = Math.floor(Date.now() / 1000)
-                setTraceBackTime(now - v)
-            }
+            setTraceBackTime(v)
         }}></Select>
         <Button onClick={() => {
             GetDanmaku()
