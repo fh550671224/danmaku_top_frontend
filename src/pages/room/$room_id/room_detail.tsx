@@ -25,7 +25,7 @@ export const RoomDetail = () => {
     const initialPageSize = parseInt(query.get('pageSize') || '10', 10);
     const initialQueryText = query.get('text') || ''
     const initialQueryNum = parseInt(query.get('topn') || '100', 10)
-    const initialTraceBackTime = parseInt(query.get('trace_back_time') || '0', 10)
+    const initialTraceBackTime = parseInt(query.get('trace_back_time') || '86400', 10)
     const initialHotOnly = query.get('hot_only') === 'true'
     const initialAuthor = query.get('author') || ''
     const initialHostFirst = query.get('hot_first') === 'true'
@@ -181,7 +181,7 @@ export const RoomDetail = () => {
         <Switch value={hotFirst} onChange={(checked) => {
             setHotFirst(checked)
         }}/>
-        <Select defaultValue={0} options={[
+        <Select defaultValue={24 * 60 * 60} value={traceBackTime} options={[
             {value: 0, label: 'ALL TIME'},
             {value: 24 * 60 * 60, label: 'LAST 24 HOURS'},
             {value: 3 * 24 * 60 * 60, label: 'LAST 72 HOURS'},
